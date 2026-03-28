@@ -711,9 +711,9 @@ async def example_usage():
     )
     
     urls = [
-        'https://www.ndtv.com/india-news/india-denies-reports-of-elon-musk-joining-donald-trump-pm-narendra-modi-phone-call-on-iran-war-11278482',
+        'https://www.ndtvprofit.com/india/dmk-candidate-list-2026-check-who-is-contesting-from-which-assembly-constituency-m-k-stalin-panneerselvam-11274652',
         'https://www.ndtv.com/world-news/yemens-houthis-join-iran-war-after-threats-launch-1st-missile-on-israel-11278295',
-        'https://www.hindustantimes.com/india-news/pm-modi-speaks-with-saudi-arabia-crown-prince-mohammed-bin-salman-discusses-west-asia-conflict-us-iran-war-101774701521659.html'
+        'https://www.indiatoday.in/india/story/india-lpg-oil-tankers-cross-strait-of-hormuz-iran-war-2888364-2026-03-28'
     ]
     
     try:
