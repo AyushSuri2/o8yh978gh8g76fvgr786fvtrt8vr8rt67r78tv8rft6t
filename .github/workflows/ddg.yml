@@ -25,4 +25,4 @@ jobs:
 
       - name: Run DDG search
         run: |
-          python Pasted\ code.py "${{ github.event.inputs.query }}"
+          python ddg_search.py "${{ github.event.inputs.query }}"
