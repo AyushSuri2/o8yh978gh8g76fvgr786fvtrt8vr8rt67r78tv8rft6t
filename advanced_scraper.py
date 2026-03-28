@@ -710,8 +710,9 @@ async def example_usage():
     )
     
     urls = [
-        'https://www.aljazeera.com/gallery/2025/6/16/photos-of-the-escalating-israel-iran-conflict',
-        'https://www.reddit.com/r/Advice/comments/1lfajdn/i_accidentally_sent_my_best_friend_my_gfs_nudes/'
+        'https://www.ndtv.com/india-news/india-denies-reports-of-elon-musk-joining-donald-trump-pm-narendra-modi-phone-call-on-iran-war-11278482',
+        'https://www.ndtv.com/world-news/yemens-houthis-join-iran-war-after-threats-launch-1st-missile-on-israel-11278295',
+        'https://www.hindustantimes.com/india-news/pm-modi-speaks-with-saudi-arabia-crown-prince-mohammed-bin-salman-discusses-west-asia-conflict-us-iran-war-101774701521659.html'
     ]
     
     try:
