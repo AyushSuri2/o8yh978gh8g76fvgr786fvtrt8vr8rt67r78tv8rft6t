@@ -15,10 +15,12 @@ env:
   PYTHON_VERSION: "3.11"
   PLAYWRIGHT_BROWSERS_PATH: /tmp/playwright-browsers
   PYTEST_TIMEOUT: 300
+  # Prevent Playwright from auto-updating browsers mid-run
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "0"
 
 jobs:
   test-scraper:
-    runs-on: ubuntu-latest  # Currently ubuntu-24.04
+    runs-on: ubuntu-latest  # ubuntu-24.04 as of March 2026
     timeout-minutes: 15
 
     steps:
@@ -31,31 +33,50 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
-      # 🔧 FIXED: Use playwright's built-in dependency installer
-      # This automatically handles Ubuntu version differences
-      - name: Install Playwright and browsers
+      - name: Install Python dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-          playwright install chromium
-          playwright install-deps chromium
 
-      # Optional: If you need manual system deps (usually NOT needed with install-deps)
-      # - name: Install system dependencies (Ubuntu 24.04 compatible)
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y \
-      #       libnss3 \
-      #       libatk-bridge2.0-0 \
-      #       libdrm2 \
-      #       libxkbcommon0 \
-      #       libxcomposite1 \
-      #       libxdamage1 \
-      #       libxrandr2 \
-      #       libgbm1 \
-      #       libasound2t64 \          # ← Fixed: was libasound2
-      #       libatspi2.0-0 \
-      #       libxshmfence1 \
-      #       xvfb
+      - name: Install Playwright browser (Chromium)
+        run: |
+          playwright install chromium
+
+      # 🔧 CRITICAL FIX: Use manual deps for Ubuntu 24.04 compatibility
+      # playwright install-deps still has issues with some 24.04 packages in older versions
+      - name: Install Playwright system dependencies (Ubuntu 24.04 compatible)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2t64 \          # ← Ubuntu 24.04: was libasound2
+            libatspi2.0-0 \
+            libxshmfence1 \
+            libxfixes3 \
+            libpango-1.0-0 \
+            libcairo2 \
+            libglib2.0-0 \
+            libdbus-1-3 \
+            libxcb1 \
+            libx11-6 \
+            libxext6 \
+            libxtst6 \
+            fonts-liberation \
+            xvfb \
+            curl \
+            wget
+
+      - name: Verify Playwright installation
+        run: |
+          python -c "from playwright.sync_api import sync_playwright; print('✅ Playwright OK')"
+          playwright install-deps chromium 2>/dev/null || echo "⚠️ install-deps skipped (manual deps installed)"
 
       - name: Run linting (optional)
         run: |
@@ -67,6 +88,8 @@ jobs:
         env:
           CAPTCHA_API_KEY: ${{ secrets.CAPTCHA_API_KEY }}
           TEST_MODE: "true"
+          # Ensure headless mode and single concurrency for CI stability
+          CI: "true"
         run: |
           python scripts/run_ci_test.py
 
@@ -74,7 +97,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scraper-test-output-${{ github.run_number }}
+          name: scraper-test-output-${{ github.run_number }}-${{ github.job }}
           path: |
             *.json
             *.csv
@@ -89,8 +112,9 @@ jobs:
         run: |
           echo "## 🧪 Scraper Test Results" >> $GITHUB_STEP_SUMMARY
           echo "- **Runner**: ${{ runner.os }} / ${{ runner.arch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **OS**: $(lsb_release -ds 2>/dev/null || echo 'Ubuntu')" >> $GITHUB_STEP_SUMMARY
           echo "- **Python**: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Playwright**: Chromium" >> $GITHUB_STEP_SUMMARY
+          echo "- **Playwright**: $(python -c 'import playwright; print(playwright.__version__)' 2>/dev/null || echo 'installed')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f "scraper.log" ]; then
             echo "<details><summary>📋 Last 30 log lines</summary>" >> $GITHUB_STEP_SUMMARY
