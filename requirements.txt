@@ -5,3 +5,19 @@ fake-useragent
 backoff
 certifi
 ddgs
+# Core dependencies
+playwright>=1.40.0
+playwright-stealth>=1.0.6
+2captcha-python>=1.3.0
+aiofiles>=23.2.0
+beautifulsoup4>=4.12.0
+Pillow>=10.0.0
+requests>=2.31.0
+
+# Optional: enhanced stealth
+# undetected-playwright @ git+https://github.com/kaliiiiiiiiii/undetected-playwright.git
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-timeout>=2.2.0
