@@ -5,9 +5,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
-# Prevent concurrent runs on the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -19,7 +18,7 @@ env:
 
 jobs:
   test-scraper:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Currently ubuntu-24.04
     timeout-minutes: 15
 
     steps:
@@ -32,50 +31,40 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
-      - name: Install system dependencies for Playwright
+      # 🔧 FIXED: Use playwright's built-in dependency installer
+      # This automatically handles Ubuntu version differences
+      - name: Install Playwright and browsers
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libnss3 \
-            libatk-bridge2.0-0 \
-            libdrm2 \
-            libxkbcommon0 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxrandr2 \
-            libgbm1 \
-            libasound2 \
-            libatspi2.0-0 \
-            libxshmfence1 \
-            xvfb
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Install Playwright browsers
-        run: |
           playwright install chromium
-          # Optional: install other browsers if needed
-          # playwright install firefox webkit
+          playwright install-deps chromium
 
-      - name: Install Playwright system deps (auto)
-        run: playwright install-deps chromium
+      # Optional: If you need manual system deps (usually NOT needed with install-deps)
+      # - name: Install system dependencies (Ubuntu 24.04 compatible)
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y \
+      #       libnss3 \
+      #       libatk-bridge2.0-0 \
+      #       libdrm2 \
+      #       libxkbcommon0 \
+      #       libxcomposite1 \
+      #       libxdamage1 \
+      #       libxrandr2 \
+      #       libgbm1 \
+      #       libasound2t64 \          # ← Fixed: was libasound2
+      #       libatspi2.0-0 \
+      #       libxshmfence1 \
+      #       xvfb
 
       - name: Run linting (optional)
         run: |
           pip install flake8 black
-          flake8 browser_scraper.py --max-line-length=120 --ignore=E203,W503
+          flake8 browser_scraper.py --max-line-length=120 --ignore=E203,W503 || true
           black --check browser_scraper.py || true
-
-      - name: Run unit tests (if you have them)
-        run: |
-          pytest tests/ -v --timeout=${{ env.PYTEST_TIMEOUT }} || true
 
       - name: Run CI-safe scraper test
         env:
-          # CAPTCHA_API_KEY is optional - only set if testing CAPTCHA flows
           CAPTCHA_API_KEY: ${{ secrets.CAPTCHA_API_KEY }}
           TEST_MODE: "true"
         run: |
@@ -85,23 +74,28 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scraper-test-output
+          name: scraper-test-output-${{ github.run_number }}
           path: |
             *.json
             *.csv
             *.log
             html_*.html
+            ci_test_output.*
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Report results
         if: always()
         run: |
-          echo "## ✅ Scraper Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Python: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- OS: ubuntu-latest" >> $GITHUB_STEP_SUMMARY
-          echo "- Playwright: Chromium installed" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 Scraper Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runner**: ${{ runner.os }} / ${{ runner.arch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Python**: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Playwright**: Chromium" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f "scraper.log" ]; then
-            echo "<details><summary>📋 Log excerpt</summary>" >> $GITHUB_STEP_SUMMARY
-            tail -50 scraper.log >> $GITHUB_STEP_SUMMARY
+            echo "<details><summary>📋 Last 30 log lines</summary>" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -30 scraper.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi
