@@ -1,0 +1,6 @@
+aiohttp
+aiofiles
+beautifulsoup4
+fake-useragent
+backoff
+certifi
