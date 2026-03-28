@@ -60,7 +60,7 @@ class ScrapeConfig:
     delay_range: tuple = (1, 3)
     max_retries: int = 3
     timeout: int = 30
-    respect_robots: bool = True
+    respect_robots: bool = False
     max_pages_per_domain: int = 100
     follow_redirects: bool = True
     extract_images: bool = False
