@@ -444,6 +444,7 @@ class AdvancedWebScraper:
                 self.stats['total_requests'] += 1
                 
                 if response.status != 200:
+                    self.failed_urls.add(url)
                     logger.warning(f"HTTP {response.status} for {url}")
                     self.stats['failed_requests'] += 1
                     return None
