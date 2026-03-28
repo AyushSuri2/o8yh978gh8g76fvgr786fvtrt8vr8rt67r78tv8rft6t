@@ -1,0 +1,28 @@
+name: Run DDG Search
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: "Search query"
+        required: true
+        default: "python programming"
+
+jobs:
+  run-search:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run DDG search
+        run: |
+          python Pasted\ code.py "${{ github.event.inputs.query }}"
