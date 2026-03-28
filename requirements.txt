@@ -6,8 +6,8 @@ backoff
 certifi
 ddgs
 # Core
-playwright==1.40.0
-playwright-stealth==1.0.6
+playwright>=1.42.0,<1.45.0
+playwright-stealth>=1.0.6
 2captcha-python==1.3.0
 aiofiles==23.2.1
 beautifulsoup4==4.12.3
